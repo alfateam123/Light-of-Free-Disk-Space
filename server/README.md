@@ -56,3 +56,7 @@ init systems (OpenRC and upstart), I don't know how
 to configure them to run things at startup.
 If you want to contribute, that's a good place to start!
 
+## How do I check everything is ok? ##
+
+Fire up your browser at http://<raspberry_ip>:5000/space.
+If you see a JSON response, everything is ok.
