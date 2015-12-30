@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+import requests
+import pygamesense as PyGameSense
+from time import sleep
+import json
+from collections import namedtuple
+
+Config = namedtuple("Config", "raspberry_url interval")
+
+GAME = "FREEDISKSPACE"
+COREPROPS = "C:/ProgramData/SteelSeries/SteelSeries Engine 3/coreProps.json"
+
+def read_config():
+    try:
+        with open("config.json") as cf:
+            conf = json.load(cf)
+            return Config(conf["raspberry_url"],
+                          conf["interval_minutes"])
+    except IOError:
+        print("warning: could not find or access config.json, using default values...")
+        return Config("http://192.168.1.193:5000/space", 5)
+
+def parse_coreprops(path):
+    with open(path) as f:
+        addr = json.load(f)["address"].split(":")
+        return (addr[0], addr[1])
+
+def connect_with_the_mouse():
+    ip, port = parse_coreprops(COREPROPS)
+    gs = PyGameSense.GameSenseBridge(ip,port) #("127.0.0.1", 49157)
+    if(gs.is_connected):
+        gs.unregister_game(GAME) #DONE TO CLEAN UP THE DATABASE
+        gs.register_game(GAME, "Free Disk Space", 5)
+        gs.getEffects().show_static_color(GAME, PyGameSense.MouseRival.DEVICE_TYPE, PyGameSense.MouseRival.ZONES, (0,0xFF,0))
+        return gs
+    raise IOError("could not connect with GameSense engine")
+
+def retrieve_space_from_raspi(conf):
+    try:
+        return requests.get(conf.raspberry_url).json()["space"]
+    except requests.exceptions.ConnectionError:
+        # return a fake value to make the user worry.
+        return 0
+
+def get_color_from_percentage(space_percentage):
+    if space_percentage > 50:
+        red = 0
+        blue = 255 * space_percentage / 100
+    else:
+        space_percentage = 2*(50 - space_percentage)
+        blue = 0
+        red = 255 * space_percentage / 100
+
+    return (int(red), 0, int(blue))
+
+def color_mouse(mouse, rgb):
+    mouse.getEffects().show_static_color(GAME, PyGameSense.MouseRival.DEVICE_TYPE, PyGameSense.MouseRival.ZONES, rgb)
+
+def main():
+    mouse = connect_with_the_mouse()
+    conf = read_config()
+    steps = 0
+    while True:
+        if steps == 0:
+            space = retrieve_space_from_raspi(conf)
+            rgb = get_color_from_percentage(space)
+            color_mouse(mouse, rgb)
+        else:
+            mouse.send_hartbeat(GAME)
+        steps = (steps+1) % 6*conf.interval
+        sleep(10)
+
+main()

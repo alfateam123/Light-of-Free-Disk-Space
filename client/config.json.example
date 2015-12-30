@@ -1,0 +1,4 @@
+{
+	"raspberry_url": "http://raspberry_ip:port/space",
+	"interval_minutes": 5
+}
