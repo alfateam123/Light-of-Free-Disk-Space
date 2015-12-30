@@ -1,0 +1,11 @@
+[Unit]
+Description=Free Disk Space
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sh /home/winter/automation/free_disk_space.sh
+
+[Install]
+WantedBy=multi-user.target
