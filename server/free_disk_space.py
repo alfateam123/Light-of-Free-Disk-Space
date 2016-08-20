@@ -21,12 +21,15 @@ def battery():
 
     first_line = output.splitlines()[0].strip()
     print(first_line)
-    batt_perc_raw = re.findall("(\d\d)%", first_line)
+    batt_perc_raw = re.findall("(\d\d\d?)%", first_line)
     print(batt_perc_raw)
     result["battery_perc"] = int(batt_perc_raw[0])
 
-    batt_remain_time = re.findall("(\d\d):(\d\d):(\d\d)", first_line)
-    result["remaining_seconds"] = (lambda x: x[0]*3600+x[1]*60+x[2])(list(map(int, batt_remain_time[0])))
+    try:
+        batt_remain_time = re.findall("(\d\d):(\d\d):(\d\d)", first_line)
+        result["remaining_seconds"] = (lambda x: x[0]*3600+x[1]*60+x[2])(list(map(int, batt_remain_time[0])))
+    except IndexError:
+        result["remaining_seconds"] = -1
 
     temperature_raw = re.findall("Thermal .+(\d\d\.\d) degrees C", output)
     print("temp", temperature_raw)
