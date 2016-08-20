@@ -11,7 +11,7 @@ This procedure has been tested on ArchLinux ARM.
 pacman -S python python-virtualenv
 virtualenv .lfds_backend
 source .lfds_backend/bin/activate
-pip install flask flask-responses psutil
+pip install flask flask-responses psutil sarge
 ```
 
 After the execution of the previous commands,
